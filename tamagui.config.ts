@@ -64,6 +64,7 @@ export const TextInputArea = styled(TextArea, {
 });
 
 export const Button = styled(YStack, {
+  marginTop: 16,
   alignItems: 'center',
   backgroundColor: '#6366F1',
   borderRadius: 28,
