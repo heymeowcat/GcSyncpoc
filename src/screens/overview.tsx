@@ -40,6 +40,11 @@ export default function Overview() {
     }
   };
 
+  const handleViewTodayData = () => {
+    const todayDate = new Date().toLocaleDateString('en-GB');
+    navigation.navigate('Details', {date: todayDate});
+  };
+
   return (
     <Container>
       <ScrollView>
@@ -54,10 +59,7 @@ export default function Overview() {
           <Button onPress={handleSave}>
             <ButtonText>Save</ButtonText>
           </Button>
-          <Button
-            onPress={() =>
-              navigation.navigate('Details', {date: '23/01/2024'})
-            }>
+          <Button onPress={handleViewTodayData}>
             <ButtonText>Today's Save Data</ButtonText>
           </Button>
         </Main>

@@ -3,6 +3,7 @@ import {createInterFont} from '@tamagui/font-inter';
 import {createMedia} from '@tamagui/react-native-media-driver';
 import {shorthands} from '@tamagui/shorthands';
 import {themes, tokens} from '@tamagui/themes';
+import {forwardRef} from 'react';
 import {
   createTamagui,
   styled,
@@ -10,6 +11,15 @@ import {
   H1,
   YStack,
   TextArea,
+  TamaguiElement,
+  ListItem as TamaguiListItem,
+  ListItemProps,
+  useListItem,
+  ListItemFrame,
+  ListItemText,
+  ListItemTitle,
+  ListItemSubtitle,
+  themeable,
 } from 'tamagui';
 
 const animations = createAnimations({
@@ -55,6 +65,7 @@ export const Title = styled(H1, {
 export const Subtitle = styled(SizableText, {
   color: '#38434D',
   size: '$9',
+  marginBottom: 10,
 });
 
 export const TextInputArea = styled(TextArea, {
@@ -88,6 +99,23 @@ export const ButtonText = styled(SizableText, {
   fontSize: 16,
   fontWeight: '600',
   textAlign: 'center',
+});
+
+const CustomListItemFrame = styled(ListItemFrame, {
+  backgroundColor: '#FFFFFF',
+  paddingTop: 10,
+});
+
+const CustomListItemTitle = styled(ListItemTitle, {
+  color: '#000',
+});
+
+export const ListItem = CustomListItemFrame.styleable((propsIn, ref) => {
+  const {props} = useListItem(propsIn, {
+    Title: CustomListItemTitle,
+  });
+
+  return <CustomListItemFrame {...props} ref={ref} />;
 });
 
 const config = createTamagui({
@@ -127,9 +155,6 @@ const config = createTamagui({
 });
 
 type AppConfig = typeof config;
-
-// Enable auto-completion of props shorthand (ex: jc="center") for Tamagui templates.
-// Docs: https://tamagui.dev/docs/core/configuration
 
 declare module 'tamagui' {
   interface TamaguiCustomConfig extends AppConfig {}
