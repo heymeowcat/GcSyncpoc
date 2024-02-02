@@ -9,6 +9,7 @@ export const initDatabase = () => {
   db.transaction(tx => {
     tx.executeSql(
       'CREATE TABLE IF NOT EXISTS data (id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT, timestamp INTEGER);',
+      'CREATE TABLE IF NOT EXISTS datesyncs (id INTEGER PRIMARY KEY AUTOINCREMENT, datetime TEXT);',
     );
   });
 };
@@ -24,6 +25,44 @@ export const insertData = (content: string, timestamp: number) => {
             resolve();
           } else {
             reject(new Error('Failed to insert data'));
+          }
+        },
+        (_, error) => reject(error),
+      );
+    });
+  });
+};
+
+export const insertDateSync = (content: string) => {
+  return new Promise<void>((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'INSERT OR REPLACE INTO datesyncs (id, content) VALUES (1, ?)',
+        [content],
+        (_, results) => {
+          if (results.rowsAffected > 0) {
+            resolve();
+          } else {
+            reject(new Error('Failed to insert data'));
+          }
+        },
+        (_, error) => reject(error),
+      );
+    });
+  });
+};
+
+export const getDateSync = () => {
+  return new Promise<string | null>((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'SELECT content FROM datesyncs WHERE id = 1',
+        [],
+        (_, results) => {
+          if (results.rows.length > 0) {
+            resolve(results.rows.item(0).content);
+          } else {
+            resolve(null);
           }
         },
         (_, error) => reject(error),

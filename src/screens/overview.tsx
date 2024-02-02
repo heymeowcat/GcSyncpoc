@@ -14,10 +14,15 @@ import {
 } from '../../tamagui.config';
 import {RootStackParamList} from '../navigation';
 import {Alert, ScrollView} from 'react-native';
-import {getData, initDatabase, insertData} from '../utils/database';
+import {
+  getData,
+  getDateSync,
+  initDatabase,
+  insertData,
+  insertDateSync,
+} from '../utils/database';
 import {useEffect, useState} from 'react';
 import _BackgroundTimer from 'react-native-background-timer';
-import moment from 'moment';
 
 type OverviewScreenNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -27,16 +32,18 @@ type OverviewScreenNavigationProps = StackNavigationProp<
 export default function Overview() {
   const navigation = useNavigation<OverviewScreenNavigationProps>();
   const [content, setContent] = useState('');
-
   useEffect(() => {
-    initDatabase();
-    checkAndUploadData();
-    const intervalId = _BackgroundTimer.setInterval(() => {
-      checkAndUploadData();
-    }, 24 * 60 * 60 * 1000);
-    return () => {
-      _BackgroundTimer.clearInterval(intervalId);
+    const setupBackgroundSync = async () => {
+      await initDatabase();
+      const intervalId = _BackgroundTimer.setInterval(() => {
+        checkAndUploadData();
+      }, 24 * 60 * 60 * 1000);
+
+      return () => {
+        _BackgroundTimer.clearInterval(intervalId);
+      };
     };
+    setupBackgroundSync();
   }, []);
 
   const handleSave = async () => {
@@ -53,6 +60,7 @@ export default function Overview() {
   const uploadData = async date => {
     try {
       const data = await getData(date);
+      console.log('data from db ---->' + JSON.stringify(date));
 
       if (data.length > 0) {
         const jsonContent = JSON.stringify(data);
@@ -70,20 +78,26 @@ export default function Overview() {
 
   const checkAndUploadData = async () => {
     try {
-      const lastSaveDate = await getData('lastSave');
+      const lastSaveDate = await getDateSync();
 
-      if (lastSaveDate.length === 0) {
-        const currentDate = moment().format('DD-MM-YYYY');
-        await insertData('lastSave', currentDate);
+      if (lastSaveDate === null) {
+        console.log('ddw');
+        const currentDate = new Date().toString();
+        await insertDateSync(currentDate);
       } else {
-        const lastSaveTime = moment(lastSaveDate[0].timestamp);
-        const currentTime = moment();
-        const timeDifference = currentTime.diff(lastSaveTime, 'milliseconds');
-
-        if (timeDifference >= 24 * 60 * 60 * 1000) {
-          const currentDate = moment().format('DD-MM-YYYY');
-          await uploadData(currentDate);
-          await insertData('lastSave', currentDate);
+        const lastSaveTime = new Date(
+          lastSaveDate.trim().replace(',', '').replace('\n', ''),
+        );
+        const currentTime = new Date(new Date().toString());
+        const timeDifference = Math.abs(
+          (currentTime.getTime() - lastSaveTime.getTime()) / (1000 * 60 * 60),
+        );
+        console.log('timedifference ->' + timeDifference);
+        if (timeDifference >= 24) {
+          uploadData(
+            new Date().toLocaleDateString('en-GB').replaceAll('/', '-'),
+          );
+          await insertDateSync(new Date().toString());
         }
       }
     } catch (error) {
@@ -92,7 +106,9 @@ export default function Overview() {
   };
 
   const handleViewTodayData = () => {
-    const todayDate = new Date().toLocaleDateString('en-GB');
+    const todayDate = new Date()
+      .toLocaleDateString('en-GB')
+      .replaceAll('/', '-');
     navigation.navigate('Details', {date: todayDate});
   };
 
@@ -109,6 +125,14 @@ export default function Overview() {
           </YStack>
           <Button onPress={handleSave}>
             <ButtonText>Save</ButtonText>
+          </Button>
+          <Button
+            onPress={() => {
+              uploadData(
+                new Date().toLocaleDateString('en-GB').replaceAll('/', '-'),
+              );
+            }}>
+            <ButtonText>Force Upload</ButtonText>
           </Button>
           <Button onPress={handleViewTodayData}>
             <ButtonText>Today's Save Data</ButtonText>
