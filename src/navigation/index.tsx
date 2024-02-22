@@ -4,8 +4,10 @@ import {Button, Text} from 'tamagui';
 
 import Details from '../screens/details';
 import Overview from '../screens/overview';
+import LoginScreen from '../screens/login';
 
 export type RootStackParamList = {
+  Login: undefined;
   Overview: undefined;
   Details: {name: string};
 };
@@ -15,8 +17,9 @@ const Stack = createStackNavigator<RootStackParamList>();
 export default function RootStack() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Overview">
-        <Stack.Screen name="Cloud Sync POC" component={Overview} />
+      <Stack.Navigator initialRouteName="Login">
+        <Stack.Screen name="Overview" component={Overview} />
+        <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen
           name="Details"
           component={Details}
